@@ -1,9 +1,6 @@
 process_meth_data <- function(X){
   # remove sites with missing values 
   X <- X[rowSums(is.na(X)) == 0,]
-  # remove consistently hyper or hypo methylated cpgs
-  means <- rowMeans(X)
-  X <- X[(means >= 0.1) & (means <= 0.9), ]
 }
 
 #' Download and organize Liu et al. and Hannum et al. Data
