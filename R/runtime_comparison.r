@@ -167,7 +167,7 @@ compare_runtimes <- function(results_dir, plot_type){
                                       method.names = c("CellDMC", "TCA (GMM)", "TCA (MLE)"),
                                       number.replications = 1,
                                       number.cell.types = 6,
-                                      seed = 42)
+                                      random_seed = 1000)
 
   runtime.plot <- plot_runtimes(runtime.results$runtimes.summary)
   outfile <- paste(results_dir, "/compare_runtimes.", plot_type,
