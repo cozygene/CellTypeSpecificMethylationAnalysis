@@ -103,7 +103,7 @@ prep_parametric_simulation_data <- function(data_path){
 }
 
 
-parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction, require_effect_direction, parametric_simulation_data_file, results_path, random_seed){
+parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction, require_effect_direction, parametric_simulation_data_file, results_path, random_seed=1000){
   
   set.seed(random_seed)
   

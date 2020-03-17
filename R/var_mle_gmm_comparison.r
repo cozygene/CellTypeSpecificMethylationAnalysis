@@ -3,9 +3,9 @@ library(ggplot2)
 
 #' Compares sigma and mu esimtation of TCA with or without vars.mle option enabled
 compare_vars_mle <- function(sample.sizes, n.replications, n.sites, n.cell.types,
-                             n.c1.covs, n.c2.covs, tau){
+                             n.c1.covs, n.c2.covs, tau, random_seed=1000){
   res <- data.frame()
-  set.seed(42)
+  set.seed(random_seed)
   for (n.samples in sample.sizes){
     for (replicate in 1:n.replications){
       sim.data <- TCA::test_data(n = n.samples, m = n.sites, k = n.cell.types,
@@ -115,7 +115,8 @@ var_mle_gmm_comparison <- function(results_dir, plot_type){
                           n.cell.types=5,
                           n.c1.covs=2,
                           n.c2.covs=2,
-                          tau=0.01)
+                          tau=0.01,
+                          random_seed=1000)
 
   res.summary <- summarize_res(res)
   res.plot <- plot_cors(res.summary)

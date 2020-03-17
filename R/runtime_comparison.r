@@ -52,16 +52,16 @@ celldmc <- function(X,W,Y){
 #'                            variability in runtime due to the system we are
 #'                            running on.
 #' @param number.cell.types Integer indicating number of cell types to simulate.
-#' @param seed Integer to set seed for simulation to ensure replicability
+#' @param random_seed Integer to set seed for simulation to ensure replicability
 #' @return A list of dataframes. First dataframe with columns indicating the method,
 #'         replicate number, sample size, number of sites, number of sources, and
 #'         total runtime for each experiment. Second dataframe summarizes replicates.
 compare_runtimes <- function(sample.sizes, number.sites, methods, method.names,
-                             number.replications, number.cell.types, seed){
+                             number.replications, number.cell.types, random_seed){
   runtimes <- data.frame()
   for (n in sort(sample.sizes, decreasing = TRUE)){
     for (m in sort(number.sites, decreasing = TRUE)){
-      set.seed(seed)
+      set.seed(random_seed)
       simtime <- system.time(sim.data <- TCA::test_data(n, m, number.cell.types, 
                                                         p1=1, p2=0, tau=0.1,
                                                         verbose=F))["elapsed"]
