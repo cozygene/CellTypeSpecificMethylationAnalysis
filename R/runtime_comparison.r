@@ -160,7 +160,7 @@ plot_runtimes <- function(runtimes.summary){
 #' @param plot_type Extension for saving plot graphics, such as pdf or png
 #' @return A list of the runtime results and plot
 #' @export
-compare_runtimes <- function(results_dir, plot_type){
+runtime_comparison <- function(results_dir, plot_type){
   runtime.results <- compare_runtimes(sample.sizes = c(50, 100, 200),
                                       number.sites = c(1000, 10000, 50000, 100000),
                                       methods = c("celldmc", "tca.gmm", "tca.mle"),
