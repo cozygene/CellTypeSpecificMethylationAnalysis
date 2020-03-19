@@ -368,7 +368,8 @@ parametric_simulations <- function(data_path, results_path, plots_path,
     
     # plots
     load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_1.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"Figure1.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1, tca.summary$tca), c("CellDMC","TCA (Y|X, marginal)","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"Figure1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"FigureS7.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
     
   }
   if (experiment_index == 2){
@@ -377,7 +378,7 @@ parametric_simulations <- function(data_path, results_path, plots_path,
     
     # plots
     load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_1.require_effect_direction.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"FigureS8.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
   }
   if (experiment_index == 3){
     # run simulations that model the phenotype as affected by cell-type-specific methylation (by setting model.direction = 0)
@@ -385,7 +386,18 @@ parametric_simulations <- function(data_path, results_path, plots_path,
     
     # plots
     load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_0.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"Figure2.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg2,tca.summary$tcareg1), c("CellDMC","TCA (Y|X)","TCA (Y|X, marginal)"), effect_sizes)
-    plot_power_simulation(paste(plots_path,"FigureS2.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"Figure2.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg2), c("CellDMC","TCA (Y|X)"), effect_sizes)
+    (paste(plots_path,"FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"FigureS9.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
+  }
+  if (experiment_index == 4){
+    # rerun experiment 1 with smaller sample size
+    parametric.run_simulation(30, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
+    load(paste(results_path,"parametric_simulation_results_m_1000_n_30_model_direction_1.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"FigureS3.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    
+    parametric.run_simulation(60, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
+    load(paste(results_path,"parametric_simulation_results_m_1000_n_60_model_direction_1.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"FigureS4.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
   }
 }
