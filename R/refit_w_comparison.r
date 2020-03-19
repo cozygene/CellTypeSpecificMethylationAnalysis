@@ -62,54 +62,55 @@ compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_
   names(site.variances) <- rownames(X)
   p <- 1000
   low.var.sites <- names(head(sort(site.variances), p))
-  low.var.pca <- prcomp(X[low.var.sites,], center=TRUE, scale=TRUE, rank=10)
+  low.var.pca <- prcomp(t(X[low.var.sites,]), center=TRUE, scale=TRUE, rank=10)
   # Covariate data for refactor
-  #cov.data <- NULL
-  cov.data <- low.var.pca$rotation
+  cov.data <- low.var.pca$x
   if (!is.null(C2)){
-    cov.data <- cbind(cov.data, C2[samples, 'Plate', drop=FALSE])
+    cov.data <- cbind(cov.data, C2)
   }
   
   # Get refactor sites
-  refactor.cov.mdl <-  TCA::refactor(X=X, k=length(cell.types),
-                                     C=cov.data, verbose=verbose, 
+  # run refactor as follows, according to the guidlines in https://glint-epigenetics.readthedocs.io/en/latest/tissueheterogeneity.html#refactor
+  # remove polymorphic or cross-reactive sites and non-autosomal sites
+  # we also consider control-prob based PCs as covaraites (as in Lenhe et al. 2015); here, since we don't work with IDAT files and therefore don't have actual control probes, we use sites with the least variation in the data as control probes (as in Rahmani et al. 2019).
+  nonspecific_probes <- read.table("https://raw.githubusercontent.com/cozygene/glint/master/parsers/assets/nonspecific_probes.txt")[,1]
+  XY_probes <- read.table("https://raw.githubusercontent.com/cozygene/glint/master/parsers/assets/HumanMethylationSites_X_Y.txt")[,1]
+  polymorphic_probes <- read.table("https://raw.githubusercontent.com/cozygene/glint/master/parsers/assets/polymorphic_cpgs.txt")[,1]
+  exclude <- union(nonspecific_probes,union(XY_probes,polymorphic_probes))
+  
+  C.refactor <- cov.data
+  X.refactor <- X[setdiff(rownames(X),exclude),]
+  refactor.cov.mdl <-  TCA::refactor(X=X.refactor, k=length(cell.types),
+                                     C=C.refactor, verbose=verbose, 
                                      rand_svd = TRUE,
                                      log_file=NULL)
   refactor.sites <- rownames(refactor.cov.mdl$coeffs)
   intersecting.sites <- intersect(refactor.sites, available.ref.sites)
   message(sprintf("%i sites intersecting with %i ref sites", length(intersecting.sites), length(available.ref.sites)))
-  if (!is.null(C2)){
-    C2 <- cbind(C2, low.var.pca$rotation)
-    #C2 <- cbind(C2, refactor.cov.mdl$scores)
-  }
-  else {
-    C2 <- low.var.pca$rotations
-    #C2 <- refactor.cov.mdl$scores
-  }
-  
+ 
   # Run TCA models
   # TCA with sites chosen by refactor
-  tca.default.mdl <- tca(X=X[refactor.sites,], W=epidish.est.props, C1=C1, C2=C2,
+  tca.default.mdl <- tca(X=X[refactor.sites,], W=epidish.est.props, C1=C1, C2=cov.data,
                          refit_W=TRUE, refit_W.features=refactor.sites,
                          refit_W.sparsity=length(refactor.sites),
                          verbose=verbose, log_file=NULL, vars.mle=FALSE,
                          constrain_mu=TRUE)
   
   # TCA with reference sites
-  tca.ref.features.mdl <- tca(X=X[available.ref.sites,], W=epidish.est.props, C1=C1, C2=C2, 
+  tca.ref.features.mdl <- tca(X=X[available.ref.sites,], W=epidish.est.props, C1=C1, C2=cov.data, 
                               refit_W=TRUE, refit_W.features=available.ref.sites, 
                               refit_W.sparsity=length(available.ref.sites), verbose=verbose,
                               log_file=NULL, vars.mle=FALSE, constrain_mu=TRUE)
   
   # TCA with sites chosen by refactor and noisy initialization
-  tca.default.noisy.mdl <- tca(X=X[refactor.sites,], W=noisy.epidish.props, C1=C1, C2=C2,
+  tca.default.noisy.mdl <- tca(X=X[refactor.sites,], W=noisy.epidish.props, C1=C1, C2=cov.data,
                                refit_W=TRUE, refit_W.features=refactor.sites,
                                refit_W.sparsity=length(refactor.sites),
                                verbose=verbose, log_file=NULL, vars.mle=FALSE,
                                constrain_mu=TRUE)
   
   # TCA with reference sites and noisy initialization
-  tca.ref.features.noisy.mdl <- tca(X=X[available.ref.sites,], W=noisy.epidish.props, C1=C1, C2=C2, 
+  tca.ref.features.noisy.mdl <- tca(X=X[available.ref.sites,], W=noisy.epidish.props, C1=C1, C2=cov.data, 
                                     refit_W=TRUE, refit_W.features=available.ref.sites, verbose=verbose,
                                     refit_W.sparsity=length(available.ref.sites),
                                     log_file=NULL, vars.mle=FALSE, constrain_mu=TRUE)
@@ -222,13 +223,14 @@ plot_results <- function(bbc.results, koestler.results,
 refit_w_comparison <- function(koestler, bbc, results_dir, plot_type, random_seed=1000){
   koestler.results <- compare_cell_fraction_estimates(X = koestler$X, 
                                                       W.facs = koestler$W.facs,
-                                                      C1 = koestler$C1, 
-                                                      C2 = koestler$C2,
+                                                      C1 = NULL, 
+                                                      C2 = koestler$C2[,"plate",drop=FALSE],
                                                       random_seed=random_seed)
+  
   bbc.results <- compare_cell_fraction_estimates(X = bbc$X,
                                                  W.facs = bbc$W.facs,
-                                                 C1 = bbc$C1,
-                                                 C2 = bbc$C2,
+                                                 C1 = NULL,
+                                                 C2 = bbc$C2[,"Plate",drop=FALSE],
                                                  random_seed=random_seed)
   
   refit.w.plot <- plot_results(bbc.results, koestler.results, 
