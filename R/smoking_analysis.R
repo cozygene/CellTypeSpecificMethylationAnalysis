@@ -166,8 +166,8 @@ plot_smoking_analysis <- function(smoking.res, outfile){
   p.tca.joint <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.joint.liu, smoking.res$tca.pvals.joint.hannum, c("joint"), "TCA - joint test")
   p.qq <- plot_qq(smoking.res)
   p.final <- ggarrange(p.celldmc, p.tca, p.tca.joint, ncol = 3, nrow = 1, labels = c("a","b","c"))
-  p.final <- ggarrange(p.final, p.qq, ncol=1,nrow=2, labels=c("", "d"))
-  ggsave(outfile, plot = p.final, width = 8.5, height = 8)
+  p.final <- ggarrange(p.final, p.qq, ncol=1,nrow=2, labels=c("", "d"), heights=c(3,7))
+  ggsave(outfile, plot = p.final, width = 8.5, height = 10)
   return(p.final)
 }
 
@@ -254,8 +254,9 @@ plot_qq <- function(smoking.res, neglogp.thresh=20){
   p <- ggplot(pval.df, aes(x = pval.exp, y=pval.obs, colour = Method)) + 
     facet_grid(Dataset ~ CellType) + 
     stat_binhex(geom = "point", bins=1000, size=1) +
-    geom_segment(aes(x = 0, xend = lim, y = 0, yend = lim), colour="black") +
-    xlab("Expected p-values") + ylab("Observed p-values") +
+    #geom_segment(aes(x = 0, xend = lim, y = 0, yend = lim), colour="black") +
+    geom_abline() +
+    xlab(expression(Expected~-log[10](p))) + ylab(Observed~-log[10](p)) +
     theme_bw() +
     guides(fill="none") + 
     theme(legend.position="bottom")

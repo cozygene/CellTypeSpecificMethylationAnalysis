@@ -1,6 +1,22 @@
 # Cell-type-specific Methylation Analysis
 
-This package provides functions that replicate the analyses reported in Rahmani et al. (2020). The main entrypoints for each analysis are as follows:
+This package provides functions that replicate the analyses reported in Rahmani et al. (2020).
+
+## Installation
+
+The package has a requirement of R version 3.4.0 or greater. The results found in Rahmani et al. (2020)
+were run using R version 3.6.0. Other package requirements are listed in the Imports section of the
+DESCRIPTION file.
+
+With the `devtools` package, you can install this package using the following command:
+
+```r
+devtools::install_github("cozygene/CellTypeSpecificMethylationAnalysis")
+```
+
+## Usage
+
+The main entrypoints for each analysis are as follows:
 
  * `compare_runtimes(results_dir, plot_type)`
 
