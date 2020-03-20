@@ -5,7 +5,7 @@ Description: Experiments for evaluating the performance of
     methods for performing cell-type-specific analyses of
     tissue-level methylation data.
 Depends:
-    R (>= 3.4.0)
+    R (>= 3.5.0)
 License: GPL-3 | file LICENSE
 LazyData: true
 Encoding: UTF-8
