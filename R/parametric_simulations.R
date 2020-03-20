@@ -337,6 +337,58 @@ parametric.simulate_bulk <- function(Z, Z.s1, Z.s2, Z.mean, Z.var, ref, W.pool, 
   return(list("Z" = Z, "W.real" = W, "W" = W.estimated, "X" = X, "y" = y, "true.cpgs" = true.cpgs, "model.direction" = model.direction))
 }
 
+plot_power_simulation <- function(outfile, methods, methods.names, effect_sizes){
+
+  titles <- c(rep(c("Uni-1C"),3),rep(c("Uni-2C"),3),rep(c("Bi-2C"),3),rep(c("Bi-3C"),3))
+  metrics <- c("SE","SP","PPV")
+  scenarios <- c("scenario1","scenario2","scenario3","scenario4")
+  
+  plots <- list(mode = vector, length = length(scenarios)*length(metrics))
+  counter <- 1
+  ylims <- list()
+  for (metric in metrics){
+    ylims[[counter]] <- c(1,0)
+    for (scenario in scenarios){
+      for (i in 1:length(methods)){
+        min_val <- min(methods[[i]][[scenario]][[metric]])
+        if (min_val < ylims[[counter]][1]) ylims[[counter]][1] <- min_val
+        max_val <- max(methods[[i]][[scenario]][[metric]])
+        if (max_val > ylims[[counter]][2]) ylims[[counter]][2] <- max_val
+      }
+    }
+    counter <- counter + 1
+  }
+  counter <- 1
+  for (scenario in scenarios){
+    metric.counter <- 1
+    for (metric in metrics){
+      num_sims <- ncol(methods[[1]][[scenario]][[metric]])
+      data <- data.frame(matrix(ncol = 3, nrow = length(methods)*length(effect_sizes)*num_sims))
+      colnames(data) <- c("method","effect_size","value")
+      for (i in 1:length(methods)){
+        data[((i-1)*length(effect_sizes)*num_sims+1):(i*length(effect_sizes)*num_sims),] <- cbind(rep(c(methods.names[i]),length(effect_sizes)*num_sims), rep(effect_sizes,num_sims), Reshape(methods[[i]][[scenario]][[metric]],length(effect_sizes)*num_sims,1))
+      }
+      data$effect_size <- as.factor(data$effect_size)
+      data$value <- as.numeric(data$value)
+      data2 <- data.frame(matrix(ncol = 3, nrow = length(effect_sizes)*length(methods)))
+      for (i in 1:length(methods)){
+        data2[((i-1)*length(effect_sizes)+1):(i*length(effect_sizes)),] <- cbind(rep(c(methods.names[i]),length(effect_sizes)), effect_sizes,rowMeans(methods[[i]][[scenario]][[metric]]))
+      }
+      colnames(data2) <- c("method","effect_size","median")
+      data2$median <- as.numeric(data2$median)
+      data2$effect_size <- as.numeric(data2$effect_size)
+      p <- ggplot(data, aes(x=effect_size, y=value, fill=method)) + geom_violin(alpha = 0.25) + theme_ipsum(axis_title_just="c") + xlab("Effect size") + ylab(metric) + ggtitle(titles[counter]) + theme(plot.margin=unit(c(0,0,0.5,0.5), "cm")) + theme(legend.position="bottom") + theme(plot.title = element_text(hjust = 0.5),legend.margin=margin(t = 0, unit='cm'),axis.title.x = element_text(face="bold"), axis.title.y = element_text(face="bold"), legend.title=element_blank()) + ylim(ylims[[metric.counter]])
+      plots[[counter]] <- p + geom_line(data=data2, aes(x=effect_size, y=median, group=method, color=method),size=1, alpha = 0.8)
+      counter <- counter + 1
+      metric.counter <- metric.counter + 1
+    }
+  }
+  p.final <- ggarrange(plots[[1]],plots[[2]],plots[[3]],plots[[4]],plots[[5]],plots[[6]],plots[[7]],plots[[8]],plots[[9]],plots[[10]],plots[[11]],plots[[12]],
+            ncol = 3, nrow = 4,
+            labels = c("a","b","c","d","e","f","g","h","i","g","k","l"))
+  ggsave(outfile,plot = p.final, width = 12, height = 12)
+}
+
 #' Replicate parametric simulations for power analyses
 #'
 #' @param data_path Path to directory to store data

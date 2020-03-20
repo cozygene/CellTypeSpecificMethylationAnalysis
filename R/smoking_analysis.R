@@ -160,14 +160,14 @@ run_smoking_analysis <- function(X, smk, C1, C2, W, smoking_cpgs, dataset.name){
   return(res.list)
 }
 
-
-
 plot_smoking_analysis <- function(smoking.res, outfile){
   p.celldmc <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$celldmc.pvals.liu, smoking.res$celldmc.pvals.hannum, smoking.res$cell_types, "CellDMC")
   p.tca <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.liu, smoking.res$tca.pvals.hannum, smoking.res$cell_types, "TCA")
   p.tca.joint <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.joint.liu, smoking.res$tca.pvals.joint.hannum, c("joint"), "TCA - joint test")
+  p.qq <- plot_qq(smoking.res)
   p.final <- ggarrange(p.celldmc, p.tca, p.tca.joint, ncol = 3, nrow = 1, labels = c("a","b","c"))
-  ggsave(outfile, plot = p.final, width = 8.5, height = 3)
+  p.final <- ggarrange(p.final, p.qq, ncol=1,nrow=2, labels=c("", "d"))
+  ggsave(outfile, plot = p.final, width = 8.5, height = 8)
   return(p.final)
 }
 
@@ -208,6 +208,58 @@ plot_smoking_heatmap <- function(cpgs, pvals.liu, pvals.hannum, cell_types, meth
           panel.background = element_rect(fill = "white", colour = "white"),
           legend.position="bottom", strip.text = element_text(size = 10,face = "bold")) 
   return(plt)
+}
+
+plot_qq <- function(smoking.res, neglogp.thresh=20){
+  liu.sites <- length(smoking.res$tca.pvals.joint.full.liu[[1]])
+  hannum.sites <- length(smoking.res$tca.pvals.joint.full.hannum[[1]])
+  obs.pvals <- c(-log10(sort(smoking.res$celldmc.pvals.full.liu[[1]])),
+                 -log10(sort(smoking.res$tca.pvals.full.liu[[1]])),
+                 -log10(sort(smoking.res$celldmc.pvals.full.liu[[2]])),
+                 -log10(sort(smoking.res$tca.pvals.full.liu[[2]])),
+                 -log10(sort(smoking.res$tca.pvals.joint.full.liu[[1]])),
+                 -log10(sort(smoking.res$celldmc.pvals.full.hannum[[1]])),
+                 -log10(sort(smoking.res$tca.pvals.full.hannum[[1]])),
+                 -log10(sort(smoking.res$celldmc.pvals.full.hannum[[2]])),
+                 -log10(sort(smoking.res$tca.pvals.full.hannum[[2]])),
+                 -log10(sort(smoking.res$tca.pvals.joint.full.hannum[[1]])))
+  exp.pvals <- c(rep(-log10((1:liu.sites)/liu.sites), 5),
+                 rep(-log10((1:hannum.sites)/hannum.sites), 5))
+  methods <- do.call(c, lapply(c(liu.sites, hannum.sites), function(m){
+    c(rep("CellDMC", m),
+      rep("TCA", m),
+      rep("CellDMC", m),
+      rep("TCA", m),
+      rep("TCA", m))
+  }))
+  cell.types <- do.call(c, lapply(c(liu.sites, hannum.sites), function(m){
+    c(rep("MYE",m*2),
+      rep("LYM", m*2),
+      rep("TCA joint test", m))
+  }))
+  data.sets <- c(rep("Liu et al.", liu.sites*5),
+                 rep("Hannum et al.", hannum.sites*5))
+  
+  pval.df <- data.frame(pval.obs=obs.pvals,
+                        pval.exp=exp.pvals,
+                        Method=methods,
+                        CellType=cell.types,
+                        Dataset=data.sets,
+                        stringsAsFactors = TRUE)
+  # exclude sites with -log10(p) > thresh
+  pval.df <- pval.df[pval.df$pval.obs <= neglogp.thresh & pval.df$pval.exp <= neglogp.thresh,]
+  lim <- min(max(pval.df$pval.exp), max(pval.df$pval.obs))
+  levels(pval.df$CellType) <- c("LYM", "MYE", "TCA joint test")
+  
+  p <- ggplot(pval.df, aes(x = pval.exp, y=pval.obs, colour = Method)) + 
+    facet_grid(Dataset ~ CellType) + 
+    stat_binhex(geom = "point", bins=1000, size=1) +
+    geom_segment(aes(x = 0, xend = lim, y = 0, yend = lim), colour="black") +
+    xlab("Expected p-values") + ylab("Observed p-values") +
+    theme_bw() +
+    guides(fill="none") + 
+    theme(legend.position="bottom")
+  return(p)
 }
 
 #' Replicate smoking analysis of Liu et al. and Hannum et al. datasets
