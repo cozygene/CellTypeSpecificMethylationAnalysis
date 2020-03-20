@@ -387,7 +387,7 @@ parametric_simulations <- function(data_path, results_path, plots_path,
     # plots
     load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_0.RData",sep=""))
     plot_power_simulation(paste(plots_path,"Figure2.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg2), c("CellDMC","TCA (Y|X)"), effect_sizes)
-    (paste(plots_path,"FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
     plot_power_simulation(paste(plots_path,"FigureS9.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
   }
   if (experiment_index == 4){
