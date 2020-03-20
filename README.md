@@ -4,7 +4,7 @@ This package provides functions that replicate the analyses reported in Rahmani 
 
 ## Installation
 
-The package has a requirement of R version 3.5.0 or greater (for loading the optional `CellTypeSpecificMethylationData` package. The results found in Rahmani et al. (2020)
+The package has a requirement of R version 3.5.0 or greater (for loading the optional `CellTypeSpecificMethylationData` package). The results found in Rahmani et al. (2020)
 were run using R version 3.6.0. Other package requirements are listed in the Imports section of the
 DESCRIPTION file.
 

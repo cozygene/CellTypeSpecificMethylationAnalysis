@@ -8,7 +8,7 @@ library(grid)
 #' methods vector should have these exact function names. Input should always
 #' be X, W, Y as produced by the simulation framework
 tca.mle <- function(X,W,Y){
-         tca.mdl <- TCA::tca(X=X, W=W,
+         tca.mdl <- TCA::tca(X=X, W=W, C1=Y,
                              vars.mle=TRUE,
                              num_cores=1,
                              log_file=NULL)
@@ -20,10 +20,26 @@ tca.mle <- function(X,W,Y){
 #' methods vector should have these exact function names. Input should always
 #' be X, W, Y as produced by the simulation framework
 tca.gmm <- function(X,W,Y){
+             tca.mdl <- TCA::tca(X=X, W=W, C1=Y,
+                                 vars.mle=FALSE,
+                                 num_cores=1,
+                                 log_file=NULL)
+             return(0)
+           }
+
+#' Run fast TCA method with tcareg
+#'
+#' methods vector should have these exact function names. Input should always
+#' be X, W, Y as produced by the simulation framework
+tca.gmm.reg <- function(X,W,Y){
              tca.mdl <- TCA::tca(X=X, W=W,
                                  vars.mle=FALSE,
                                  num_cores=1,
                                  log_file=NULL)
+             reg.res <- TCA::tcareg(X=X, tca.mdl=tca.mdl,
+                                    y=Y, num_cores=1,
+                                    log_file=NULL,
+                                    fast_mode=TRUE)
              return(0)
            }
 
@@ -163,8 +179,8 @@ plot_runtimes <- function(runtimes.summary){
 runtime_comparison <- function(results_dir, plot_type){
   runtime.results <- compare_runtimes(sample.sizes = c(50, 100, 200),
                                       number.sites = c(1000, 10000, 50000, 100000),
-                                      methods = c("celldmc", "tca.gmm", "tca.mle"),
-                                      method.names = c("CellDMC", "TCA (GMM)", "TCA (MLE)"),
+                                      methods = c("celldmc", "tca.gmm", "tca.mle", "tca.gmm.reg"),
+                                      method.names = c("CellDMC", "TCA (GMM)", "TCA (MLE)", "TCA (GMM+reg)"),
                                       number.replications = 1,
                                       number.cell.types = 6,
                                       random_seed = 1000)
