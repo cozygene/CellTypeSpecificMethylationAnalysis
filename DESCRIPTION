@@ -4,8 +4,6 @@ Title: Evaluation of Cell Type Specific Methylation Analysis
 Description: Experiments for evaluating the performance of 
     methods for performing cell-type-specific analyses of
     tissue-level methylation data.
-Depends:
-    R (>= 3.5.0)
 License: GPL-3 | file LICENSE
 LazyData: true
 Encoding: UTF-8
@@ -14,7 +12,8 @@ Authors@R: c(
 					 email="brandon.jew@ucla.edu"),
     person("Elior", "Rahmani", role=c("aut"))
     )
-Imports:
+Depends:
+  R (>= 3.5.0),
   TCA (>= 1.2.0),
   EpiDISH,
   ggplot2,
