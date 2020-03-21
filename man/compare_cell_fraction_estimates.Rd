@@ -9,6 +9,7 @@ compare_cell_fraction_estimates(
   W.facs,
   C1 = NULL,
   C2 = NULL,
+  random_seed = 1000,
   verbose = TRUE
 )
 }
@@ -23,6 +24,10 @@ row names as samples}
 
 \item{C2}{Matrix of mixture-level covariates for TCA with column names as features and
 row names as samples}
+
+\item{random_seed}{Random seed for replication}
+
+\item{verbose}{Boolean for printing out progress}
 }
 \value{
 A list of results. Slot performance.metrics contains a dataframe where each

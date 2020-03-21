@@ -4,7 +4,7 @@
 \alias{run_smoking_analysis}
 \title{Smoking analysis of methylation data}
 \usage{
-run_smoking_analysis(X, smk, covs, W, smoking_cpgs, dataset.name)
+run_smoking_analysis(X, smk, C1, C2, W, smoking_cpgs, dataset.name)
 }
 \arguments{
 \item{X}{Methylation values in matrix with sites as rows and samples as columns}
@@ -12,7 +12,10 @@ run_smoking_analysis(X, smk, covs, W, smoking_cpgs, dataset.name)
 \item{smk}{Smoking status encoded as 0 (non-smoker), 1 (ex-smoker), or 2 (smoker) in
 a matrix with rownames as samples and 1 column entitled \code{smoking}}
 
-\item{covs}{Covariates in matrix format. Rownames are samples and column names are
+\item{C1}{Covariates in matrix format; for covariates that may affect methylation at the cell-type level. Rownames are samples and column names are
+covariate names}
+
+\item{C2}{Covariates in matrix format; for covariates that may affect the methylation mixtures. Rownames are samples and column names are
 covariate names}
 
 \item{W}{Cell fractions in a matrix with cell types as column names and samples as
@@ -27,7 +30,7 @@ A list of results. Each slot contains p-values output by each method
 }
 \description{
 Performs cell-type-specific analysis of blood methylation data in the context of smoking.
-Provides p-values estimated by CellDMC and TCA while correcting for given covariates
-as well as ReFACTor components. Combines cell types into myeloid and lymphoid compartments
+Provides p-values estimated by CellDMC and TCA while correcting for known covariates
+as well unknown technical variation using PCs calculated from control probes. Combines cell types into myeloid and lymphoid compartments
 for analysis.
 }

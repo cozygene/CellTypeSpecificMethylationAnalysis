@@ -5,27 +5,47 @@
 \title{Replicate parametric simulations for power analyses}
 \usage{
 parametric_simulations(
-  data_path,
-  results_path,
-  plots_path,
-  experiment_index = c(1, 2, 3),
+  data_dir,
+  results_dir,
+  plot_dir,
+  plot_type = "tiff",
+  experiment_index = c(1, 2, 3, 4),
   num_cores = 1,
-  image_format = "tiff"
+  m = 1000,
+  m.true = 100,
+  effect_sizes = 1:8,
+  n = 500,
+  num_sims = 50
 )
 }
 \arguments{
-\item{data_path}{Path to directory to store data}
+\item{data_dir}{Path to directory to store data}
 
-\item{results_path}{Path to directory to store results}
+\item{results_dir}{Path to directory to store results}
 
-\item{plots_path}{Path to directory to store plots}
+\item{plot_dir}{Path to directory to store plots}
 
-\item{experiment_index}{An integer in 1, 2, or 3. 1 specifies phenotype
+\item{plot_type}{Type of image to save plot}
+
+\item{experiment_index}{An integer in 1, 2, 3, or 4. 1 specifies phenotype
 affecting cell-type-specific methylation levels.
 2 specifies the same as one but true positives
 also consider predicted direction.
 3 specifies the phenotype being affected by
-cell-type-specific methylation levels.}
+cell-type-specific methylation levels. 4 is the
+same as 1 with smaller sample size}
+
+\item{num_cores}{Number of cores to use for analysis}
+
+\item{m}{Number CpGs to simulate}
+
+\item{m.true}{Number of true associations}
+
+\item{effect_sizes}{Vector of effect sizes to simulate}
+
+\item{n}{Sample size}
+
+\item{num_sims}{Number of simulations to run}
 }
 \value{
 None (TODO: Return a list of results)

@@ -4,12 +4,21 @@
 \alias{var_mle_gmm_comparison}
 \title{Compare parameter estimation of TCA in MLE versus GMM Mode}
 \usage{
-var_mle_gmm_comparison(results_dir, plot_type)
+var_mle_gmm_comparison(
+  plot_dir,
+  plot_type = "tiff",
+  sample.sizes = c(100, 500, 1000),
+  n.replications = 5
+)
 }
 \arguments{
-\item{results_dir}{Directory to save plot of results}
+\item{plot_dir}{Directory to save plot of results}
 
 \item{plot_type}{Extension for saving plot graphics, such as pdf or png}
+
+\item{sample.sizes}{Sample sizes for simulation}
+
+\item{n.replications}{Number of replications to do for each sample size.}
 }
 \value{
 A list of the results and plot

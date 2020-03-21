@@ -4,15 +4,17 @@
 \alias{compare_runtimes}
 \title{Compare method runtimes across various input sizes}
 \usage{
-compare_runtimes(results_dir, plot_type)
-
-compare_runtimes(results_dir, plot_type)
+compare_runtimes(
+  sample.sizes,
+  number.sites,
+  methods,
+  method.names,
+  number.replications,
+  number.cell.types,
+  random_seed
+)
 }
 \arguments{
-\item{results_dir}{Directory to save plot of results}
-
-\item{plot_type}{Extension for saving plot graphics, such as pdf or png}
-
 \item{sample.sizes}{Numeric vector for sample sizes to simulate.}
 
 \item{number.sites}{Numeric vector for number of features/sites to simulate.}
@@ -32,17 +34,13 @@ running on.}
 
 \item{number.cell.types}{Integer indicating number of cell types to simulate.}
 
-\item{seed}{Integer to set seed for simulation to ensure replicability}
+\item{random_seed}{Integer to set seed for simulation to ensure replicability}
 }
 \value{
 A list of dataframes. First dataframe with columns indicating the method,
         replicate number, sample size, number of sites, number of sources, and
         total runtime for each experiment. Second dataframe summarizes replicates.
-
-A list of the runtime results and plot
 }
 \description{
 Compare method runtimes across various input sizes
-
-Compare runtimes of CellDMC and TCA (GMM and MLE modes)
 }

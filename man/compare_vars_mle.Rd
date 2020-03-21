@@ -11,7 +11,8 @@ compare_vars_mle(
   n.cell.types,
   n.c1.covs,
   n.c2.covs,
-  tau
+  tau,
+  random_seed = 1000
 )
 }
 \description{
