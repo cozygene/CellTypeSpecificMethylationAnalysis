@@ -172,13 +172,17 @@ plot_runtimes <- function(runtimes.summary){
 
 #' Compare runtimes of CellDMC and TCA (GMM and MLE modes)
 #'
-#' @param results_dir Directory to save plot of results
+#' @param plot_dir Directory to save plot of results
 #' @param plot_type Extension for saving plot graphics, such as pdf or png
+#' @param sample.sizes Vector of sample sizes to run
+#' @param number.sites Vector of number of features to run
 #' @return A list of the runtime results and plot
 #' @export
-runtime_comparison <- function(results_dir, plot_type){
-  runtime.results <- compare_runtimes(sample.sizes = c(50, 100, 200),
-                                      number.sites = c(1000, 10000, 50000, 100000),
+runtime_comparison <- function(plot_dir, plot_type="tiff",
+                               sample.sizes=c(50,100,200),
+                               number.sites=c(1000,10000,50000,100000)){
+  runtime.results <- compare_runtimes(sample.sizes = sample.sizes,
+                                      number.sites = number.sites,
                                       methods = c("celldmc", "tca.gmm", "tca.mle", "tca.gmm.reg"),
                                       method.names = c("CellDMC", "TCA (GMM)", "TCA (MLE)", "TCA (GMM+reg)"),
                                       number.replications = 1,
@@ -186,7 +190,7 @@ runtime_comparison <- function(results_dir, plot_type){
                                       random_seed = 1000)
 
   runtime.plot <- plot_runtimes(runtime.results$runtimes.summary)
-  outfile <- paste(results_dir, "/compare_runtimes.", plot_type,
+  outfile <- paste(plot_dir, "/FigureS5.", plot_type,
                    sep="")
   ggplot2::ggsave(outfile, plot = runtime.plot,  width = 10, height=4.6, units = "in")
   return(list(runtime.results=runtime.results,

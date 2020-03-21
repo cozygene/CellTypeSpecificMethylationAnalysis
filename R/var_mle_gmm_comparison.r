@@ -104,13 +104,17 @@ plot_cors <- function(res.summary){
 
 #' Compare parameter estimation of TCA in MLE versus GMM Mode
 #'
-#' @param results_dir Directory to save plot of results
+#' @param plot_dir Directory to save plot of results
 #' @param plot_type Extension for saving plot graphics, such as pdf or png
+#' @param sample.sizes Sample sizes for simulation
+#' @param n.replications Number of replications to do for each sample size.
 #' @return A list of the results and plot
 #' @export
-var_mle_gmm_comparison <- function(results_dir, plot_type){
-  res <- compare_vars_mle(sample.sizes=c(100,500,1000),
-                          n.replications=5,
+var_mle_gmm_comparison <- function(plot_dir, plot_type="tiff",
+                                   sample.sizes=c(100,500,1000),
+                                   n.replications=5){
+  res <- compare_vars_mle(sample.sizes=sample.sizes,
+                          n.replications=n.replications,
                           n.sites=100,
                           n.cell.types=5,
                           n.c1.covs=2,
@@ -120,7 +124,7 @@ var_mle_gmm_comparison <- function(results_dir, plot_type){
 
   res.summary <- summarize_res(res)
   res.plot <- plot_cors(res.summary)
-  outfile <- paste(results_dir, "/var_mle_gmm_comparison.", plot_type,
+  outfile <- paste(plot_dir, "/FigureS6.", plot_type,
                    sep="")
   ggplot2::ggsave(outfile, plot = res.plot, width = 7, height=4.6, units = "in")
   return(list(mle.gmm.comparison.results=res.summary,

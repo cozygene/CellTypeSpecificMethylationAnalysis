@@ -1,12 +1,33 @@
+library(TCA)
+library(EpiDISH)
+library(ggplot2)
+library(Biobase)
+library(plyr)
+library(cowplot)
+library(grid)
+library(matrixStats)
+library(parallel)
+library(pbapply)
+library(R.utils)
+library(data.table)
+library(EnvStats)
+library(pracma)
+library(stats)
+library(nloptr)
+library(testit)
+library(gridExtra)
+library(ggpubr)
+library(hrbrthemes)
+library(GEOquery)
 
 get_reference_data <- function(data_path){
-  if (!file.exists(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep=""))){
-    download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE35069&format=file&file=GSE35069%5FMatrix%5Fsignal%5Fintensities%2Etxt%2Egz", paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep=""))
-    gunzip(paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep=""))
+  if (!file.exists(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep="/"))){
+    download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE35069&format=file&file=GSE35069%5FMatrix%5Fsignal%5Fintensities%2Etxt%2Egz", paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep="/"))
+    GEOquery::gunzip(paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep="/"))
   }
   cell_types.names <- c("Granulocytes", "CD4+", "CD8+", "monocytes","CD19+","NK")
   cell_types.sample_pos <- cbind(seq(13,18),seq(19,24),seq(25,30),seq(31,36),seq(37,42),seq(43,48))
-  Z.raw <- read.table(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep=""), sep="\t", header=TRUE, row.names = 1)
+  Z.raw <- read.table(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep="/"), sep="\t", header=TRUE, row.names = 1)
   k <- length(cell_types.names)
   Z.beta <- vector(mode="list", length=k)
   for (h in 1:k){
@@ -23,11 +44,11 @@ get_reference_data <- function(data_path){
 
 
 get_hannum <- function(data_path){
-  if (!file.exists(paste(data_path,"GSE40279_average_beta.txt",sep=""))){
-    download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE40279&format=file&file=GSE40279%5Faverage%5Fbeta%2Etxt%2Egz",paste(data_path,"GSE40279_average_beta.txt.gz",sep=""))
-    gunzip(paste(data_path, "GSE40279_average_beta.txt.gz",sep=""))
+  if (!file.exists(paste(data_path,"GSE40279_average_beta.txt",sep="/"))){
+    download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE40279&format=file&file=GSE40279%5Faverage%5Fbeta%2Etxt%2Egz",paste(data_path,"GSE40279_average_beta.txt.gz",sep="/"))
+    GEOquery::gunzip(paste(data_path, "GSE40279_average_beta.txt.gz",sep="/"))
   }
-  X <- fread(paste(data_path,"GSE40279_average_beta.txt",sep =""),header = TRUE)
+  X <- data.table::fread(paste(data_path,"GSE40279_average_beta.txt",sep ="/"),header = TRUE)
   X.cpgs <- as.matrix(X[,1])[,1]
   X <- as.matrix(X[,2:ncol(X)])
   rownames(X) <- X.cpgs
@@ -35,7 +56,7 @@ get_hannum <- function(data_path){
 }
 
 
-init_summary_lists <- function(){
+init_summary_lists <- function(effect_sizes, num_sims){
   celldmc.summary <- list()
   for (i in 1:4){
     scenario <- paste("scenario",i,sep="")
@@ -46,7 +67,7 @@ init_summary_lists <- function(){
   }
   tca.methods <- c("tca","tcareg1","tcareg2")
   tca.summary <- list()
-  for (method in tca.methods) tca.summary[[method]] <- copy(celldmc.summary)
+  for (method in tca.methods) tca.summary[[method]] <- data.table::copy(celldmc.summary)
   return(list("tca.summary" = tca.summary, "celldmc.summary" = celldmc.summary))
 }
 
@@ -66,8 +87,7 @@ get_scenario_effect_pairs <- function(effect_sizes, num_scenarios){
 
 prep_parametric_simulation_data <- function(data_path){
   
-  file_name <- paste(data_path, "parametric_simulation_data.RData", sep="")
-  
+  file_name <- paste(data_path, "/parametric_simulation_data.RData", sep="")
   if (!file.exists(file_name)){
     # Download and prepare the Reinius et al. data from which we will estimate the parameters for data simnulation.
     Z.beta <- get_reference_data(data_path)
@@ -75,8 +95,9 @@ prep_parametric_simulation_data <- function(data_path){
     # Load the reference data that will be used for estimating cell-type proportions
     # blood.ref.333cpgs.txt is the list of cpgs and their means as described in in Teschendorff et al. 2017, BMC Bioinformatics.
     #ref.tmp <- read.table("assets/blood.ref.333cpgs.txt", header = T, row.names = 1)
-    ref.tmp <- EpiDISH::centDHSbloodDMC.m
-    ref <- as.matrix(ref.tmp[,c("Gran","CD4T","CD8T","Mono","B","NK")])
+    #ref.tmp <- EpiDISH::centDHSbloodDMC.m
+    #ref <- as.matrix(ref.tmp[,c("Gran","CD4T","CD8T","Mono","B","NK")])
+    ref <- blood.ref.333cpgs
     ref.cpgnames <- rownames(ref)
     
     # Download the Hannum et al. data
@@ -104,7 +125,6 @@ prep_parametric_simulation_data <- function(data_path){
 
 
 parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction, require_effect_direction, parametric_simulation_data_file, results_path, random_seed=1000){
-  
   set.seed(random_seed)
   
   load(parametric_simulation_data_file)
@@ -112,7 +132,7 @@ parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_
   k <- ncol(W.hannum)
   non_ref.cpgnames <- setdiff(rownames(Z.s1),ref.cpgnames)
   
-  lst <- init_summary_lists()
+  lst <- init_summary_lists(effect_sizes, num_sims)
   celldmc.summary <- lst$celldmc.summary
   tca.summary <- lst$tca.summary
   
@@ -132,9 +152,13 @@ parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_
       # scenario-effect size pairs to run
       S <- get_scenario_effect_pairs(effect_sizes, 4)
       
-      if (num_cores-1) clusterExport(cl, varlist = c("k","m","S","Z.sim","Z.s1","Z.s2","Z.mean","Z.var","Z.sim.cpgnames","W.hannum","parametric.simulate_bulk","run_celldmc.simulation","run_tca.simulation","evaluate_celldmc_results","evaluate_tca_results", "parametric.select_true_sites", "calculate_metrics","m.true","model.direction","ref"), envir=environment())
+      if (num_cores-1) clusterExport(cl, varlist = c("k","m","S","Z.sim","Z.s1","Z.s2","Z.mean","Z.var",
+                                                     "Z.sim.cpgnames","W.hannum","parametric.simulate_bulk",
+                                                     "run_celldmc.simulation","run_tca.simulation","evaluate_celldmc_results",
+                                                     "evaluate_tca_results", "parametric.select_true_sites", "calculate_metrics",
+                                                     "m.true","model.direction","ref", "require_effect_direction"), envir=environment())
       
-      res <- pblapply(1:nrow(S),function(j){
+      res <- pbapply::pblapply(1:nrow(S),function(j){
         scenario <- S[j,1];
         effect_size <- S[j,2];
         bulk <- parametric.simulate_bulk(Z.sim, Z.s1[Z.sim.cpgnames,], Z.s2[Z.sim.cpgnames,], Z.mean[Z.sim.cpgnames,], Z.var[Z.sim.cpgnames,], ref, W.hannum, m.true, effect_size, as.character(scenario), model.direction = model.direction);
@@ -155,9 +179,9 @@ parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_
     
     #if (parametric_simulation_data_file){
     if (require_effect_direction){
-      filename <- paste(results_path,"parametric_simulation_results_m_",m,"_n_",n,"_model_direction_",model.direction,".require_effect_direction.RData",sep="")
+      filename <- paste(results_path,"/parametric_simulation_results_m_",m,"_n_",n,"_model_direction_",model.direction,".require_effect_direction.RData",sep="")
     }else{
-      filename <- paste(results_path,"parametric_simulation_results_m_",m,"_n_",n,"_model_direction_",model.direction,".RData",sep="")
+      filename <- paste(results_path,"/parametric_simulation_results_m_",m,"_n_",n,"_model_direction_",model.direction,".RData",sep="")
     }
     save(celldmc.summary, tca.summary, effect_sizes, n, m, m.true, model.direction, file = filename)
     
@@ -198,7 +222,7 @@ fit_beta <- function(Z.beta){
   for (h in 1:k){
     for (j in 1:m){
       if (sd(Z.beta[[h]][j,]) == 0) next
-      res <- ebeta(Z.beta[[h]][j,], method = "mme")  
+      res <- EnvStats::ebeta(Z.beta[[h]][j,], method = "mme")  
       Z.s1[j,h] <- res$parameters[1]
       Z.s2[j,h] <- res$parameters[2]
       s <- Z.s1[j,h] + Z.s2[j,h]
@@ -262,12 +286,12 @@ parametric.select_true_sites <- function(Z.mean, Z.var, m.true, m.true.cell_type
       func <- function(x) (abs(mu2[h]-x)/sqrt((sigma2[h]**2 + (x*(1-x)/(mu2[h]*(1-mu2[h])))*sigma2[h]**2)/2) - effect_size )**2
       if (mu2[h] < m.true.low){
         true.cpgs$changes[i,h] <- 1 # 1 for hyper
-        mu1 <- nloptr(mu2[h], func, lb = mu2[h], ub = 1, opts = opts)$solution
-        assert(mu1 > mu2[h])
+        mu1 <- nloptr::nloptr(mu2[h], func, lb = mu2[h], ub = 1, opts = opts)$solution
+        testit::assert(mu1 > mu2[h])
       }else{
         true.cpgs$changes[i,h] <- -1 # -1 for hypo
-        mu1 <- nloptr(mu2[h], func, lb = 0, ub = mu2[h], opts = opts)$solution
-        assert(mu1 < mu2[h])
+        mu1 <- nloptr::nloptr(mu2[h], func, lb = 0, ub = mu2[h], opts = opts)$solution
+        testit::assert(mu1 < mu2[h])
       }
       sigma1 <- sqrt(mu1*(1-mu1)/(mu2[h]*(1-mu2[h])))*sigma2[h]
       true.cpgs$beta.s1[i,h] <- ((1-mu1)/(sigma1**2) - 1/mu1)*(mu1**2)
@@ -328,7 +352,7 @@ parametric.simulate_bulk <- function(Z, Z.s1, Z.s2, Z.mean, Z.var, ref, W.pool, 
   }
   
   X <- matrix(0,m,n)
-  for (h in 1:k) X <- X + Z[[h]]*repmat(W[,h],m,1)
+  for (h in 1:k) X <- X + Z[[h]]*pracma::repmat(W[,h],m,1)
   colnames(X) <- rownames(W)
   
   # Estimate W using a reference-based approach
@@ -391,37 +415,47 @@ plot_power_simulation <- function(outfile, methods, methods.names, effect_sizes)
 
 #' Replicate parametric simulations for power analyses
 #'
-#' @param data_path Path to directory to store data
-#' @param results_path Path to directory to store results
-#' @param plots_path Path to directory to store plots
-#' @param experiment_index An integer in 1, 2, or 3. 1 specifies phenotype
+#' @param data_dir Path to directory to store data
+#' @param results_dir Path to directory to store results
+#' @param plot_dir Path to directory to store plots
+#' @param plot_type Type of image to save plot
+#' @param experiment_index An integer in 1, 2, 3, or 4. 1 specifies phenotype
 #'                         affecting cell-type-specific methylation levels.
 #'                         2 specifies the same as one but true positives
 #'                         also consider predicted direction.
 #'                         3 specifies the phenotype being affected by
-#'                         cell-type-specific methylation levels.
+#'                         cell-type-specific methylation levels. 4 is the
+#'                         same as 1 with smaller sample size
+#' @param num_cores Number of cores to use for analysis
+#' @param m Number CpGs to simulate
+#' @param m.true Number of true associations
+#' @param effect_sizes Vector of effect sizes to simulate
+#' @param n Sample size
+#' @param num_sims Number of simulations to run
 #' @return None (TODO: Return a list of results)
 #' @export
-parametric_simulations <- function(data_path, results_path, plots_path,
-                                   experiment_index=c(1,2,3), num_cores=1,
-                                   image_format = "tiff"){
-  experiment_index <- base::match.arg(experiment_index)
-  m <- 1000 # number of features; on top of 333 reference features
-  m.true <- 100 # number of truely associated features
-  effect_sizes <- seq(1,8,1) # a sequence of effect sizes to consider
-  n <- 500  # number of individuals
-  num_sims <- 50  # the number of times to repeat the experiment
+parametric_simulations <- function(data_dir, results_dir, plot_dir,
+                                   plot_type = "tiff",
+                                   experiment_index=c(1,2,3,4), num_cores=1,
+                                   m=1000, m.true=100, effect_sizes=1:8,
+                                   n=500, num_sims=50){
+  random_seed <- 1000
+  if (m.true > m){
+    stop("m.true should be less than or equal to m")
+  }
+  # for consistent variable names across functions
+  plots_path <- plot_dir
+  results_path <- results_dir
+  image_format <- plot_type
   # download and prepare data
-  parametric_simulation_data_file <- prep_parametric_simulation_data(data_path)
-
+  parametric_simulation_data_file <- prep_parametric_simulation_data(data_dir)
   if (experiment_index == 1){
     # run simulations that model the phenotype as affecting methylation at the cell-type level (by setting model.direction = 1)
     parametric.run_simulation(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
-    
     # plots
-    load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_1.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"Figure1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
-    plot_power_simulation(paste(plots_path,"FigureS7.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
+    load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_",n,"_model_direction_1.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"/Figure1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"/FigureS7.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
     
   }
   if (experiment_index == 2){
@@ -429,27 +463,27 @@ parametric_simulations <- function(data_path, results_path, plots_path,
     parametric.run_simulation(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = TRUE, parametric_simulation_data_file, results_path, random_seed)
     
     # plots
-    load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_1.require_effect_direction.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"FigureS8.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
+    load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_",n,"_model_direction_1.require_effect_direction.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"/FigureS8.", image_format, sep=""), list(celldmc.summary, tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
   }
   if (experiment_index == 3){
     # run simulations that model the phenotype as affected by cell-type-specific methylation (by setting model.direction = 0)
     parametric.run_simulation(n, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 0, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
     
     # plots
-    load(paste(results_path,"parametric_simulation_results_m_1000_n_500_model_direction_0.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"Figure2.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg2), c("CellDMC","TCA (Y|X)"), effect_sizes)
-    plot_power_simulation(paste(plots_path,"FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
-    plot_power_simulation(paste(plots_path,"FigureS9.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
+    load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_",n,"_model_direction_0.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"/Figure2.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg2), c("CellDMC","TCA (Y|X)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"/FigureS1.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    plot_power_simulation(paste(plots_path,"/FigureS9.",image_format, sep=""), list(celldmc.summary,tca.summary$tcareg1), c("CellDMC","TCA (Y|X, marginal)"), effect_sizes)
   }
   if (experiment_index == 4){
     # rerun experiment 1 with smaller sample size
     parametric.run_simulation(30, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
-    load(paste(results_path,"parametric_simulation_results_m_1000_n_30_model_direction_1.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"FigureS3.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_30_model_direction_1.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"/FigureS3.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
     
     parametric.run_simulation(60, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
-    load(paste(results_path,"parametric_simulation_results_m_1000_n_60_model_direction_1.RData",sep=""))
-    plot_power_simulation(paste(plots_path,"FigureS4.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
+    load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_60_model_direction_1.RData",sep=""))
+    plot_power_simulation(paste(plots_path,"/FigureS4.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
   }
 }

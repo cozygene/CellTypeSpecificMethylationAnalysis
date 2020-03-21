@@ -1,5 +1,5 @@
 
-calculate_metrics <- function(true.cpgs, pvals, estimated_effects, th = 0.05, require_effect_direction){
+calculate_metrics <- function(true.cpgs, pvals, estimated_effects,  require_effect_direction,th = 0.05){
   k <- ncol(pvals)
   true.cpgs.rownames <- rownames(true.cpgs)
   cpgs.rownames <- rownames(pvals)

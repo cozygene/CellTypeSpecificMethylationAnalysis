@@ -71,7 +71,6 @@ run_tca.simulation <- function(bulk){
   
 }
 
-
 run_celldmc.simulation <- function(bulk){
   names <- colnames(bulk$W)
   if (bulk$model.direction == 1){
