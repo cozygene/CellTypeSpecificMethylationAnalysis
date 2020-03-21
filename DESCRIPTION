@@ -34,7 +34,8 @@ Depends:
   gridExtra,
   ggpubr,
   hrbrthemes,
-  GEOquery
-Suggests:
-  CellTypeSpecificMethylationData
+  GEOquery,
+  ENmix,
+  IlluminaHumanMethylationEPICmanifest,
+  IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 RoxygenNote: 7.0.2

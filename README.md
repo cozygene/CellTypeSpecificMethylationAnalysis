@@ -1,6 +1,6 @@
 # Cell-type-specific Methylation Analysis
 
-This package provides functions that replicate the analyses reported in Rahmani et al. (2020) comparing TCA (Rahmani et al. 2019) and CellDMC (Zheng et al. 2018).
+This package provides functions that reproduce the analyses reported in Rahmani et al. (2020) comparing TCA (Rahmani et al. 2019) and CellDMC (Zheng et al. 2018).
 
 ## Installation
 
@@ -20,7 +20,7 @@ The functions exported by this package will download most of the source data and
 
 ### Parametric Simulations
 
-Figure 1 and Supplementary Figure 7 evaluate the methods when a phenotype affects methylation (X|Y). They can be replicated with the following
+Figure 1 and Supplementary Figure 7 evaluate the methods when a phenotype affects methylation (X|Y). They can be reproduced with the following
 
 ```r
 parametric_simulations(data_dir, results_dir, plots_dir,
@@ -29,7 +29,7 @@ parametric_simulations(data_dir, results_dir, plots_dir,
 
 which will save the simulation data, results, and plots (in tiff format) in the provided directories
 
-Figure 2 and Supplementary Figures 1 and 9 evaluate the methods when a phenotype is affected by methlation, which can be replicated with 
+Figure 2 and Supplementary Figures 1 and 9 evaluate the methods when a phenotype is affected by methlation, which can be reproduced with 
 
 ```r
 parametric_simulations(data_dir, results_dir, plots_dir,
@@ -56,10 +56,10 @@ parametric_simulations(data_dir, results_dir, plots_dir,
 
 The methods were benchmarked on two independent whole-blood datasets (Hannum et al., Liu et al.) .
 
-Figure 3 visualizes these results and can be replicated as follows:
+Figure 3 visualizes these results and can be reproduced as follows:
 ```r
-smoking.res <- smoking_analysis(data_dir, results_dir, plot_dir,
-                                hannum_smk_status_path="hannum_smoking_status.txt")
+smoking.res <- smoking_analysis(hannum_smk_status_path="hannum_smoking_status.txt",
+                                data_dir, results_dir, plot_dir)
 ```
 where `hannum_smk_status_path` is the path to a CSV file that contains the smoking status of samples in the Hannum et al. dataset. This data is currently not publicly available but is required for this analysis. It contains a header indicating `ID` and `smk` columns that contain the sample IDs and smoking status, respectively. Smoking status is listed as either `Never`, `Past Smoker`, or `Current Smoker` in this file. 
 
@@ -69,14 +69,15 @@ where `hannum_smk_status_path` is the path to a CSV file that contains the smoki
 Supplementary Figure 2 evaluates estimation of cell fractions in two whole-blood datasets (Koestler et al, Jing et al) with FACS-based fractions as ground truth. It can be generated with
 
 ```r
-refit.w.res <- refit_w_comparison(koestler, bbc, plot_dir)
+refit.w.res <- refit_w_comparison(bbc_pheno_path, bbc_facs_path,
+                                  data_dir, plot_dir)
 ```
 
-where `koestler` is available in the `CellTypeSpecificMethylationData` analysis and is also publicly available on GEO (GSE77797). Preprocessing of these data in the above package followed procedures described in Lehne et al (Genome Biology 2015). The `bbc` object is also available in the data package. The raw data is available through NODE (OER035661) and was processed with the `epic_qc(idat_dir, data_dir)` function available in this package. Note that the phenotype data must be attached to the `bbc` in slots `W.facs` (Facs counts in matrix with cell types in columns, samples in rows) and `C2` (matrix with 1 column indicating plate number for each sample in `Plate` column name). These phenotype data are under restricted access and were acquired from Jing et al. 
+The Koestler et al. data that is analyzed within this function is available as an object exported by this package and is also publicly available on GEO (GSE77797). Preprocessing of these data in the above package followed procedures described in Lehne et al (Genome Biology 2015). The BBC data, which is available through NODE (OER035661), is downloaded and processed by this function. Note that the phenotype and FACS data are currently under restriced acces. The `bbc_pheno_path` and `bbc_facs_path` parameters point to the Rd files that contain these data and were provided by Jing et al.
 
 ### Runtime Comparison
 
-The runtime of each method was also compared in Supplementary Figure 5. These results can be replicated with the following function:
+The runtime of each method was also compared in Supplementary Figure 5. These results can be reproduced with the following function:
 
 ```r
 runtime.res <- runtime_comparison(plot_dir)

@@ -3,6 +3,100 @@ library(TCA)
 library(ggplot2)
 library(plyr)
 library(cowplot)
+library(ENmix)
+
+#' Downloads and processes raw BBC methylation data
+#'
+#' @param data_dir Directory to save bbc.RData
+#' @param bbc_pheno_path Path to PhenoTypesBBC.Rd (provided by Jing et al.) which contains
+#'                       covariates for the BBC dataset
+#' @param bbc_facs_path Path to facsBBC.Rd (provided by Jing et al.) which contains 
+#'                      FACS-based cell fractions for the BBC dataset
+#' @return The bbc object for analysis. Also saves an RData file to specified directory
+prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
+  file.name <- paste(data_dir,"bbc.RData",sep="/")
+  if (!file.exists(file.name)){
+    # Create directory to store IDAT files
+    idat.dir <- paste0(data_dir, "/BBC")
+    dir.create(idat.dir, showWarnings = FALSE)
+    
+    # Function since there are multiple IDAT directories to download
+    download_idat <- function(idat_name, url){
+      idat.zip.path <- paste0(data_dir, "/BBC/", idat_name, ".zip")
+      utils::download.file(url = url, destfile = idat.zip.path)
+      utils::unzip(zipfile=idat.zip.path, exdir = idat.dir)
+      file.remove(idat.zip.path)
+    }
+    
+    download_idat(idat_name="IDATS_SA00224658",
+                  url="https://www.biosino.org/download/node/data/public/OED094843")
+    download_idat(idat_name="IDATS_SA00157489",
+                  url="https://www.biosino.org/download/node/data/public/OED094844")
+    bbc$X <- epic_qc(idat.dir)
+    # delete IDAT files
+    unlink(idat.dir, recursive = TRUE)
+    # process pheno and facs data
+    pheno.types <- get(load(bbc_pheno_path))
+    facs.counts <- get(load(bbc_facs_path))
+    cov.names <- c("Plate", "Visit", "Sex", "Age", "IntG", "BMI", "SMK")
+    c1.names <- c("Sex", "Age") 
+    c2.names <- c("BMI", "SMK", "Plate", "IntG")
+    #remove eos/bas from facs counts and renormalize
+    facs.counts <- facs.counts[,c('B','NK','CD4T','CD8T','Mon', 'Neu')]
+    facs.counts <- facs.counts/rowSums(facs.counts)
+    pheno.types <- data.frame(pheno.types)
+    samples <- intersect(rownames(pheno.types), colnames(beta.vals))
+    pheno.types <- pheno.types[samples,]
+    # Add column for facs lookup
+    pheno.types$facsID <- paste(pheno.types$PID, pheno.types$Visit, sep="-V")
+    cov.data <- pheno.types[,cov.names,drop=F]
+    # Adjust Plate, Visit, and Sex categorical variables to be 0 and 1
+    cov.data$Plate <- cov.data$Plate - 1
+    cov.data$Visit <- cov.data$Visit - 1
+    cov.data$Sex <- cov.data$Sex - 1
+    # Need to remove 2 samples (1 individual) for missing sex
+    samples <- rownames(cov.data[complete.cases(cov.data[,c(c1.names, c2.names), drop=F]),])
+    C1 <- cov.data[samples, c1.names, drop=F]
+    C2 <- cov.data[samples, c2.names, drop=F]
+    # rename facs counts
+    rownames(facs.counts) <-  plyr::mapvalues(rownames(facs.counts),
+                                              from=pheno.types[samples,"facsID"],
+                                              to=samples)
+    # remove samples with missing values in FACS counts
+    facs.counts <- facs.counts[complete.cases(facs.counts),]
+    samples <- intersect(rownames(facs.counts), colnames(beta.vals))
+    samples <- intersect(samples, rownames(cov.data))
+    C1 <- C1[samples,]
+    C2 <- C2[samples,]
+    bbc$X <- bbc$X[,samples]
+    bbc$W.facs <- facs.counts
+    bbc$C1 <- C1
+    bbc$C2 <- c2
+    save(bbc, file.name)
+  }
+  else{
+    load(file.name)
+  }
+  return(bbc)
+}
+
+#' Preprocessing for BBC dataset with ENmix
+#' 
+#' @param idat_dir Directory storing IDAT files
+#' @return Matrix of beta values
+epic_qc <- function(idat_dir){
+  rgSet<-readidat(idat.dir,
+                  recursive=T, verbose=T)
+  #neg: will use 600 chip internal controls probes to estimate background distribution parameters.
+  #RELIC: REgression on Logarithm of Internal Control probes
+  background = preprocessENmix(rgSet, bgParaEst="neg", dyeCorr="RELIC",nCores=1)
+  ##quantile3: will quantile normalize combined Methylated or Unmethylated intensities for Infinium I and II probes together
+  normalized = norm.quantile(background, method="quantile3")
+  
+  #Probe design type bias correction using Regression on Correlated Probes (RCP) method
+  probecorrected = rcp(normalized)
+  return(probecorrected)
+}
 
 #' Compares cell fraction estimates from EpiDISH and TCA under several models
 #'
@@ -214,45 +308,27 @@ plot_results <- function(bbc.results, koestler.results,
   return(refit.w.plot)
 }
 
-#' preprocessing for BBC dataset
-#' 
-#' @param idat_dir Directory storing IDAT files
-#' @param data_dir Directory to store output beta values.
-#' @return Path to the beta value csv
-#' @export
-epic_qc <- function(idat_dir, data_dir){
-  out.file <- sprintf("%s/BBC_beta_ENmix_QC.csv", data_dir)
-  rgSet<-readidat(idat.dir,
-                  recursive=T, verbose=T)
-  #neg: will use 600 chip internal controls probes to estimate background distribution parameters.
-  #RELIC: REgression on Logarithm of Internal Control probes
-  background = preprocessENmix(rgSet, bgParaEst="neg", dyeCorr="RELIC",nCores=1)
-  ##quantile3: will quantile normalize combined Methylated or Unmethylated intensities for Infinium I and II probes together
-  normalized = norm.quantile(background, method="quantile3")
-  
-  #Probe design type bias correction using Regression on Correlated Probes (RCP) method
-  probecorrected = rcp(normalized)
-  
-  ##get betas
-  bg_beta = data.frame(probecorrected)
-  write.csv(bg_beta, out.file,
-            quote=FALSE) 
-}
+
 
 #' Replicate cell type fraction analysis of Koestler et al. and BBC datasets
 #'
-#' @param koestler List provided in CellTypeSpecificMethylationData
-#'                 package under the same name
-#' @param bbc List provided in CellTypeSpecificMethylationData package under the same name
+#' @param bbc_pheno_path Path to PhenoTypesBBC.Rd (provided by Jing et al.) which contains
+#'                       covariates for the BBC dataset
+#' @param bbc_facs_path Path to facsBBC.Rd (provided by Jing et al.) which contains 
+#'                      FACS-based cell fractions for the BBC dataset
+#' @param data_dir Directory to store BBC data
 #' @param plot_dir Directory to save plot of results
 #' @param plot_type Extension for saving plot graphics, such as pdf or png
 #' @param n.sites Number of sites to subset for quick testing purposes.
 #' @return A list of results. Slot \code{results} contains a list of proportions and metrics generated
 #'         by each method on each dataset. Slot \code{plot} contains the plot object
 #' @export
-refit_w_comparison <- function(koestler, bbc, plot_dir, plot_type="tiff", n.sites=NULL){
+refit_w_comparison <- function(bbc_pheno_path, bbc_facs_path, data_dir, plot_dir, plot_type="tiff", n.sites=NULL){
   random_seed = 1000
+  # Load BBC dataset (or download and process if not present)
+  bbc <- prep_bbc_data(data_dir, bbc_pheno_path, bbc_facs_path)
   if (!is.null(n.sites)){
+    # subsetting if n.sites provided for quick testing
     set.seed(1000)
     ref.sites <- rownames(EpiDISH::centDHSbloodDMC.m)
     koestler.sites <- rownames(koestler$X)[!(rownames(koestler$X) %in% ref.sites)]
@@ -262,6 +338,7 @@ refit_w_comparison <- function(koestler, bbc, plot_dir, plot_type="tiff", n.site
     bbc.sites <- c(intersect(rownames(bbc$X), ref.sites), sample(bbc.sites, n.sites))
     bbc$X <- bbc$X[bbc.sites,]
   }
+  # Koestler dataset is included with this package as a list (koestler)
   koestler.results <- compare_cell_fraction_estimates(X = koestler$X, 
                                                       W.facs = koestler$W.facs,
                                                       C1 = NULL, 

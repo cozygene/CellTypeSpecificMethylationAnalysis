@@ -5,15 +5,19 @@
 \title{Replicate smoking analysis of Liu et al. and Hannum et al. datasets}
 \usage{
 smoking_analysis(
+  hannum_smk_status_path,
   data_dir,
   results_dir,
   plot_dir,
   plot_type = "tiff",
-  hannum_smk_status_path,
   n.sites = NULL
 )
 }
 \arguments{
+\item{hannum_smk_status_path}{Path to CSV containing GSM IDs as rownames and a column titled
+\code{smk} that contains either \code{Never}, \code{Current Smoker},
+or \code{Past Smoker} for each sample.}
+
 \item{data_dir}{Directory to save Liu and Hannum data for analysis}
 
 \item{results_dir}{Directory to save results}
@@ -21,10 +25,6 @@ smoking_analysis(
 \item{plot_dir}{Directory to save plots}
 
 \item{plot_type}{Extension for saving plot graphics, such as pdf or png}
-
-\item{hannum_smk_status_path}{Path to CSV containing GSM IDs as rownames and a column titled
-\code{smk} that contains either \code{Never}, \code{Current Smoker},
-or \code{Past Smoker} for each sample.}
 
 \item{n.sites}{Number of sites to subset from each subset for quick execution (for testing)}
 }

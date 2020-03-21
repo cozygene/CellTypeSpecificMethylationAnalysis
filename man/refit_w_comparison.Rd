@@ -4,13 +4,23 @@
 \alias{refit_w_comparison}
 \title{Replicate cell type fraction analysis of Koestler et al. and BBC datasets}
 \usage{
-refit_w_comparison(koestler, bbc, plot_dir, plot_type = "tiff", n.sites = NULL)
+refit_w_comparison(
+  bbc_pheno_path,
+  bbc_facs_path,
+  data_dir,
+  plot_dir,
+  plot_type = "tiff",
+  n.sites = NULL
+)
 }
 \arguments{
-\item{koestler}{List provided in CellTypeSpecificMethylationData
-package under the same name}
+\item{bbc_pheno_path}{Path to PhenoTypesBBC.Rd (provided by Jing et al.) which contains
+covariates for the BBC dataset}
 
-\item{bbc}{List provided in CellTypeSpecificMethylationData package under the same name}
+\item{bbc_facs_path}{Path to facsBBC.Rd (provided by Jing et al.) which contains 
+FACS-based cell fractions for the BBC dataset}
+
+\item{data_dir}{Directory to store BBC data}
 
 \item{plot_dir}{Directory to save plot of results}
 

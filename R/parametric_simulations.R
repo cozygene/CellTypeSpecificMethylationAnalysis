@@ -1,12 +1,14 @@
 
 get_reference_data <- function(data_path){
-  if (!file.exists(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep="/"))){
+  gse.file <- paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep="/")
+  gse.gz.file <- paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep="/")
+  if (!file.exists(gse.file)){
     download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE35069&format=file&file=GSE35069%5FMatrix%5Fsignal%5Fintensities%2Etxt%2Egz", paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep="/"))
-    GEOquery::gunzip(paste(data_path,"GSE35069_Matrix_signal_intensities.txt.gz",sep="/"))
+    GEOquery::gunzip(gse.gz.file)
   }
   cell_types.names <- c("Granulocytes", "CD4+", "CD8+", "monocytes","CD19+","NK")
   cell_types.sample_pos <- cbind(seq(13,18),seq(19,24),seq(25,30),seq(31,36),seq(37,42),seq(43,48))
-  Z.raw <- read.table(paste(data_path,"GSE35069_Matrix_signal_intensities.txt",sep="/"), sep="\t", header=TRUE, row.names = 1)
+  Z.raw <- read.table(gse.file, sep="\t", header=TRUE, row.names = 1)
   k <- length(cell_types.names)
   Z.beta <- vector(mode="list", length=k)
   for (h in 1:k){
@@ -18,19 +20,22 @@ get_reference_data <- function(data_path){
       counter <- counter + 1
     }
   }
+  file.remove(gse.file)
   return (Z.beta)  
 }
 
 
 get_hannum <- function(data_path){
-  if (!file.exists(paste(data_path,"GSE40279_average_beta.txt",sep="/"))){
+  gse.file <- paste(data_path,"GSE40279_average_beta.txt",sep="/")
+  if (!file.exists(gse.file)){
     download.file("https://www.ncbi.nlm.nih.gov/geo/download/?acc=GSE40279&format=file&file=GSE40279%5Faverage%5Fbeta%2Etxt%2Egz",paste(data_path,"GSE40279_average_beta.txt.gz",sep="/"))
     GEOquery::gunzip(paste(data_path, "GSE40279_average_beta.txt.gz",sep="/"))
   }
-  X <- data.table::fread(paste(data_path,"GSE40279_average_beta.txt",sep ="/"),header = TRUE)
+  X <- data.table::fread(gse.file,header = TRUE)
   X.cpgs <- as.matrix(X[,1])[,1]
   X <- as.matrix(X[,2:ncol(X)])
   rownames(X) <- X.cpgs
+  file.remove(gse.file)
   return (X)
 }
 

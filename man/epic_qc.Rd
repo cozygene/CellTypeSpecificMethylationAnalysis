@@ -2,18 +2,16 @@
 % Please edit documentation in R/refit_w_comparison.r
 \name{epic_qc}
 \alias{epic_qc}
-\title{preprocessing for BBC dataset}
+\title{Preprocessing for BBC dataset with ENmix}
 \usage{
-epic_qc(idat_dir, data_dir)
+epic_qc(idat_dir)
 }
 \arguments{
 \item{idat_dir}{Directory storing IDAT files}
-
-\item{data_dir}{Directory to store output beta values.}
 }
 \value{
-Path to the beta value csv
+Matrix of beta values
 }
 \description{
-preprocessing for BBC dataset
+Preprocessing for BBC dataset with ENmix
 }
