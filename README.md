@@ -4,7 +4,7 @@ This package provides functions that reproduce the analyses reported in Rahmani 
 
 ## Installation
 
-The package has a requirement of R version 3.5.0 or greater (for loading the optional `CellTypeSpecificMethylationData` package). The results found in Rahmani et al. (2020)
+The package has a requirement of R version 3.5.0 or greater. The results found in Rahmani et al. (2020)
 were run using R version 3.6.0. Other package requirements are listed in the Imports section of the
 DESCRIPTION file.
 
@@ -27,9 +27,9 @@ parametric_simulations(data_dir, results_dir, plots_dir,
                        experiment_index=1)
 ```
 
-which will save the simulation data, results, and plots (in tiff format) in the provided directories
+which will save the simulation data, results, and plots (in tiff format) in the provided directories.
 
-Figure 2 and Supplementary Figures 1 and 9 evaluate the methods when a phenotype is affected by methlation, which can be reproduced with 
+Figure 2 and Supplementary Figures 1 and 9 evaluate the methods when a phenotype is affected by methlation (Y|X), which can be reproduced with 
 
 ```r
 parametric_simulations(data_dir, results_dir, plots_dir,
@@ -66,7 +66,7 @@ where `hannum_smk_status_path` is the path to a CSV file that contains the smoki
 
 ### Cell Fraction Estimation
 
-Supplementary Figure 2 evaluates estimation of cell fractions in two whole-blood datasets (Koestler et al, Jing et al) with FACS-based fractions as ground truth. It can be reproduced with
+Supplementary Figure 2 evaluates estimation of cell fractions in two whole-blood datasets (Koestler et al., Jing et al.) with FACS-based fractions as ground truth. It can be reproduced with
 
 ```r
 refit.w.res <- refit_w_comparison(bbc_pheno_path="PhenoTypesBBC.Rd",
@@ -74,7 +74,7 @@ refit.w.res <- refit_w_comparison(bbc_pheno_path="PhenoTypesBBC.Rd",
                                   data_dir, plot_dir)
 ```
 
-The Koestler et al. data that is analyzed within this function is available as an object exported by this package and is also publicly available on GEO (GSE77797). Preprocessing of these data in the above package followed procedures described in Lehne et al (Genome Biology 2015). The BBC data, which is available through NODE (OER035661), is downloaded and processed by this function. Note that the phenotype and FACS data are currently under restriced acces. The `bbc_pheno_path` and `bbc_facs_path` parameters point to the Rd files that contain these data and were provided by Jing et al.
+The Koestler et al. data that is analyzed within this function is available as an object exported by this package and is also publicly available on GEO (GSE77797). Preprocessing of these data in the above package followed procedures described in Lehne et al. (Genome Biology 2015). The BBC data, which is available through NODE (OER035661), is downloaded and processed by this function. Note that the phenotype and FACS data are currently under restriced acces. The `bbc_pheno_path` and `bbc_facs_path` parameters point to the Rd files that contain these data and were provided by Jing et al.
 
 ### Runtime Comparison
 
