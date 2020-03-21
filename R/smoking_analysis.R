@@ -163,10 +163,10 @@ run_smoking_analysis <- function(X, smk, C1, C2, W, smoking_cpgs, dataset.name){
 plot_smoking_analysis <- function(smoking.res, outfile){
   p.celldmc <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$celldmc.pvals.liu, smoking.res$celldmc.pvals.hannum, smoking.res$cell_types, "CellDMC")
   p.tca <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.liu, smoking.res$tca.pvals.hannum, smoking.res$cell_types, "TCA")
-  p.tca.joint <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.joint.liu, smoking.res$tca.pvals.joint.hannum, c("joint"), "TCA - joint test")
+  p.tca.joint <- plot_smoking_heatmap(smoking.res$smoking_cpgs, smoking.res$tca.pvals.joint.liu, smoking.res$tca.pvals.joint.hannum, c("Joint"), "TCA - joint test")
   p.qq <- plot_qq(smoking.res)
   p.final <- ggarrange(p.celldmc, p.tca, p.tca.joint, ncol = 3, nrow = 1, labels = c("a","b","c"))
-  p.final <- ggarrange(p.final, p.qq, ncol=1,nrow=2, labels=c("", "d"), heights=c(3,7))
+  p.final <- ggarrange(p.final, p.qq, ncol=1,nrow=2, labels=c("", "d"), heights=c(3,4.5))
   ggsave(outfile, plot = p.final, width = 8.5, height = 10)
   return(p.final)
 }
@@ -200,7 +200,8 @@ plot_smoking_heatmap <- function(cpgs, pvals.liu, pvals.hannum, cell_types, meth
     ggtitle(method_title) +
     ylab(NULL) +
     xlab(NULL) +
-    labs(fill="-log10(P)") +
+    labs(fill=expression(-log[10](P))) +
+    
     theme(axis.text.y = element_text(colour = c("#009E73","#009E73","#D55E00","#D55E00",
                                                 "#D55E00","#D55E00","#D55E00")),
           axis.text.x = axis.text.x, plot.title = element_text(hjust = 0.5),
@@ -210,7 +211,7 @@ plot_smoking_heatmap <- function(cpgs, pvals.liu, pvals.hannum, cell_types, meth
   return(plt)
 }
 
-plot_qq <- function(smoking.res, neglogp.thresh=20){
+plot_qq <- function(smoking.res, neglogp.thresh=10){
   liu.sites <- length(smoking.res$tca.pvals.joint.full.liu[[1]])
   hannum.sites <- length(smoking.res$tca.pvals.joint.full.hannum[[1]])
   obs.pvals <- c(-log10(sort(smoking.res$celldmc.pvals.full.liu[[1]])),
@@ -249,17 +250,17 @@ plot_qq <- function(smoking.res, neglogp.thresh=20){
   # exclude sites with -log10(p) > thresh
   pval.df <- pval.df[pval.df$pval.obs <= neglogp.thresh & pval.df$pval.exp <= neglogp.thresh,]
   lim <- min(max(pval.df$pval.exp), max(pval.df$pval.obs))
-  levels(pval.df$CellType) <- c("LYM", "MYE", "TCA joint test")
+  levels(pval.df$CellType) <- c("LYM", "MYE", "Joint")
   
   p <- ggplot(pval.df, aes(x = pval.exp, y=pval.obs, colour = Method)) + 
     facet_grid(Dataset ~ CellType) + 
     stat_binhex(geom = "point", bins=1000, size=1) +
     #geom_segment(aes(x = 0, xend = lim, y = 0, yend = lim), colour="black") +
     geom_abline() +
-    xlab(expression(Expected~-log[10](p))) + ylab(Observed~-log[10](p)) +
+    xlab(expression(Expected~-log[10](P))) + ylab(expression(Observed~-log[10](P))) +
     theme_bw() +
     guides(fill="none") + 
-    theme(legend.position="bottom")
+    theme(legend.position="bottom", strip.background = element_blank(), panel.border = element_rect(colour = "black"))
   return(p)
 }
 
