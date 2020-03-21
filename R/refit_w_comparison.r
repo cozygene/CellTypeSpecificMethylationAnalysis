@@ -66,7 +66,7 @@ compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_
   # Covariate data for refactor
   cov.data <- low.var.pca$x
   if (!is.null(C2)){
-    cov.data <- cbind(cov.data, C2)
+    cov.data <- cbind(C2, cov.data)
   }
   
   # Get refactor sites
@@ -87,8 +87,14 @@ compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_
   refactor.sites <- rownames(refactor.cov.mdl$coeffs)
   intersecting.sites <- intersect(refactor.sites, available.ref.sites)
   message(sprintf("%i sites intersecting with %i ref sites", length(intersecting.sites), length(available.ref.sites)))
- 
+  
   # Run TCA models
+  
+  #if (ncol(X) < 100){
+  # in case of a small sample size (as in the Koestler data) we should not add many covariates; do not consider the low variance site PCs as covariates in this case
+  #  cov.data <- if (is.null(C2)) NULL else cov.data[,1:ncol(C2)]
+  #}
+  
   # TCA with sites chosen by refactor
   tca.default.mdl <- tca(X=X[refactor.sites,], W=epidish.est.props, C1=C1, C2=cov.data,
                          refit_W=TRUE, refit_W.features=refactor.sites,
