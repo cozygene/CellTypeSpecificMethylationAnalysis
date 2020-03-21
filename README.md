@@ -66,10 +66,11 @@ where `hannum_smk_status_path` is the path to a CSV file that contains the smoki
 
 ### Cell Fraction Estimation
 
-Supplementary Figure 2 evaluates estimation of cell fractions in two whole-blood datasets (Koestler et al, Jing et al) with FACS-based fractions as ground truth. It can be generated with
+Supplementary Figure 2 evaluates estimation of cell fractions in two whole-blood datasets (Koestler et al, Jing et al) with FACS-based fractions as ground truth. It can be reproduced with
 
 ```r
-refit.w.res <- refit_w_comparison(bbc_pheno_path, bbc_facs_path,
+refit.w.res <- refit_w_comparison(bbc_pheno_path="PhenoTypesBBC.Rd",
+                                  bbc_facs_path="facsBBC.Rd",
                                   data_dir, plot_dir)
 ```
 
