@@ -72,7 +72,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
     bbc$X <- bbc$X[,samples]
     bbc$W.facs <- facs.counts
     bbc$C1 <- C1
-    bbc$C2 <- c2
+    bbc$C2 <- C2
     save(bbc, file.name)
   }
   else{
