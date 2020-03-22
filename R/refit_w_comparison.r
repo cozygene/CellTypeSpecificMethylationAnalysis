@@ -46,7 +46,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
     facs.counts <- facs.counts[,c('B','NK','CD4T','CD8T','Mon', 'Neu')]
     facs.counts <- facs.counts/rowSums(facs.counts)
     pheno.types <- data.frame(pheno.types)
-    samples <- intersect(rownames(pheno.types), colnames(beta.vals))
+    samples <- intersect(rownames(pheno.types), colnames(bbc$X))
     pheno.types <- pheno.types[samples,]
     # Add column for facs lookup
     pheno.types$facsID <- paste(pheno.types$PID, pheno.types$Visit, sep="-V")
@@ -65,7 +65,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
                                               to=samples)
     # remove samples with missing values in FACS counts
     facs.counts <- facs.counts[complete.cases(facs.counts),]
-    samples <- intersect(rownames(facs.counts), colnames(beta.vals))
+    samples <- intersect(rownames(facs.counts), colnames(bbc$X))
     samples <- intersect(samples, rownames(cov.data))
     C1 <- C1[samples,]
     C2 <- C2[samples,]
