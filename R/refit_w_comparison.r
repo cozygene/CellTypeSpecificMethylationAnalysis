@@ -73,7 +73,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
     bbc$W.facs <- facs.counts
     bbc$C1 <- C1
     bbc$C2 <- C2
-    save(bbc, file.name)
+    save(bbc, file=file.name)
   }
   else{
     load(file.name)
