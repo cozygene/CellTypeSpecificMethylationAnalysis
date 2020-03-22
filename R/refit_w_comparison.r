@@ -85,7 +85,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
 #' @param idat_dir Directory storing IDAT files
 #' @return Matrix of beta values
 epic_qc <- function(idat_dir){
-  rgSet<-readidat(idat.dir,
+  rgSet<-readidat(idat_dir,
                   recursive=T, verbose=T)
   #neg: will use 600 chip internal controls probes to estimate background distribution parameters.
   #RELIC: REgression on Logarithm of Internal Control probes
