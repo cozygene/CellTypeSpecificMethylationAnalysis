@@ -32,6 +32,7 @@ prep_bbc_data <- function(data_dir, bbc_pheno_path, bbc_facs_path){
                   url="https://www.biosino.org/download/node/data/public/OED094843")
     download_idat(idat_name="IDATS_SA00157489",
                   url="https://www.biosino.org/download/node/data/public/OED094844")
+    bbc <- list()
     bbc$X <- epic_qc(idat.dir)
     # delete IDAT files
     unlink(idat.dir, recursive = TRUE)
