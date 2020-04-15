@@ -129,36 +129,50 @@ parametric.run_simulation <- function(n, m, m.true, effect_sizes, num_sims, num_
     } 
     
     for (num_sim in 1:num_sims){
-      print(num_sim)
-      # simulate cell-type-specific levels; add the 333 reference sites at the end
-      Z.sim <- parametric.simulate_Z(Z.beta, Z.s1, Z.s2, ref.cpgnames, non_ref.cpgnames, n, m) 
-      Z.sim.cpgnames <- rownames(Z.sim[[1]])
-      # scenario-effect size pairs to run
-      S <- get_scenario_effect_pairs(effect_sizes, 4)
-      
-      if (num_cores-1) clusterExport(cl, varlist = c("k","m","S","Z.sim","Z.s1","Z.s2","Z.mean","Z.var",
-                                                     "Z.sim.cpgnames","W.hannum","parametric.simulate_bulk",
-                                                     "run_celldmc.simulation","run_tca.simulation","evaluate_celldmc_results",
-                                                     "evaluate_tca_results", "parametric.select_true_sites", "calculate_metrics",
-                                                     "m.true","model.direction","ref", "require_effect_direction"), envir=environment())
-      
-      res <- pbapply::pblapply(1:nrow(S),function(j){
-        scenario <- S[j,1];
-        effect_size <- S[j,2];
-        bulk <- parametric.simulate_bulk(Z.sim, Z.s1[Z.sim.cpgnames,], Z.s2[Z.sim.cpgnames,], Z.mean[Z.sim.cpgnames,], Z.var[Z.sim.cpgnames,], ref, W.hannum, m.true, effect_size, as.character(scenario), model.direction = model.direction);
-        celldmc.res <- run_celldmc.simulation(bulk);
-        celldmc.metrics <- evaluate_celldmc_results(celldmc.res, bulk$true.cpgs, m, k, require_effect_direction);
-        tca.res <- run_tca.simulation(bulk);
-        tca.metrics <- evaluate_tca_results(tca.res, bulk$true.cpgs, m, k, require_effect_direction);
-        res.metrics <- list();
-        res.metrics[["celldmc.res"]] <- celldmc.metrics;
-        res.metrics[["tca.res"]] <- tca.metrics;
-        return(res.metrics) },cl = cl )
-      
+      sim_success <- FALSE
+      tries <- 0
+      max.tries <- 3
+      while (!sim_success){
+        print(num_sim)
+        # simulate cell-type-specific levels; add the 333 reference sites at the end
+        Z.sim <- parametric.simulate_Z(Z.beta, Z.s1, Z.s2, ref.cpgnames, non_ref.cpgnames, n, m) 
+        Z.sim.cpgnames <- rownames(Z.sim[[1]])
+        # scenario-effect size pairs to run
+        S <- get_scenario_effect_pairs(effect_sizes, 4)
+        
+        if (num_cores-1) clusterExport(cl, varlist = c("k","m","S","Z.sim","Z.s1","Z.s2","Z.mean","Z.var",
+                                                       "Z.sim.cpgnames","W.hannum","parametric.simulate_bulk",
+                                                       "run_celldmc.simulation","run_tca.simulation","evaluate_celldmc_results",
+                                                       "evaluate_tca_results", "parametric.select_true_sites", "calculate_metrics",
+                                                       "m.true","model.direction","ref", "require_effect_direction"), envir=environment())
+        # ADDED tryCatch here for CellDMC bug when feature has too little variance
+        tryCatch({ 
+          res <- pbapply::pblapply(1:nrow(S),function(j){
+            scenario <- S[j,1];
+            effect_size <- S[j,2];
+            bulk <- parametric.simulate_bulk(Z.sim, Z.s1[Z.sim.cpgnames,], Z.s2[Z.sim.cpgnames,], Z.mean[Z.sim.cpgnames,], Z.var[Z.sim.cpgnames,], ref, W.hannum, m.true, effect_size, as.character(scenario), model.direction = model.direction);
+            celldmc.res <- run_celldmc.simulation(bulk);
+            # if an error occurs at celldmc.res, restart this loop (at most max.tries times)
+            celldmc.metrics <- evaluate_celldmc_results(celldmc.res, bulk$true.cpgs, m, k, require_effect_direction);
+            tca.res <- run_tca.simulation(bulk);
+            tca.metrics <- evaluate_tca_results(tca.res, bulk$true.cpgs, m, k, require_effect_direction);
+            res.metrics <- list();
+            res.metrics[["celldmc.res"]] <- celldmc.metrics;
+            res.metrics[["tca.res"]] <- tca.metrics;
+            return(res.metrics) },cl = cl )
+          sim_success <- TRUE},
+          error = function(c){message("There was an error!")
+                              message(c)})
+        if (!sim_success){
+          tries <- tries + 1
+          if (tries >= max.tries){
+            stop("Maximum attempts for simulation reached, simulation parameters may be causing issues with CellDMC.")
+          }
+        }
+      }
       lst <- update_metrics_summaries(S, res, num_sim, tca.summary, celldmc.summary)
       tca.summary <- lst$tca.summary
       celldmc.summary <- lst$celldmc.summary
-      
     }
     
     #if (parametric_simulation_data_file){
