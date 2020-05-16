@@ -476,7 +476,8 @@ parametric_simulations <- function(data_dir, results_dir, plot_dir,
   }
   if (experiment_index == 4){
     # rerun experiment 1 with smaller sample size
-    parametric.run_simulation(30, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
+    print(paste(plots_path,"/FigureS3.", image_format, sep=""))
+    #parametric.run_simulation(30, m, m.true, effect_sizes, num_sims, num_cores, model.direction = 1, require_effect_direction = FALSE, parametric_simulation_data_file, results_path, random_seed)
     load(paste(results_path,"/parametric_simulation_results_m_",m,"_n_30_model_direction_1.RData",sep=""))
     plot_power_simulation(paste(plots_path,"/FigureS3.", image_format, sep=""), list(celldmc.summary, tca.summary$tca), c("CellDMC","TCA (X|Y)"), effect_sizes)
     

@@ -109,12 +109,13 @@ epic_qc <- function(idat_dir){
 #' @param C2 Matrix of mixture-level covariates for TCA with column names as features and
 #'           row names as samples
 #' @param random_seed Random seed for replication
+#' @param pidsley Boolean for filtering Pidsley sites from EPIC array.
 #' @param verbose Boolean for printing out progress
 #' @return A list of results. Slot performance.metrics contains a dataframe where each
 #'         row indicates either the PCC or RMSE of a method for estimating a specific
 #'         cell type fraction. Slot prop.estimates contains a list of fractions estimated
 #'         by each method.
-compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_seed=1000, verbose=TRUE){
+compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_seed=1000, pidsley=FALSE, verbose=TRUE){
   set.seed(random_seed)
   cell.types <- c('B','NK','CD4T','CD8T','Mon', 'Neu')
   if (all.equal(sort(colnames(W.facs)),sort(cell.types)) != TRUE){
@@ -171,7 +172,10 @@ compare_cell_fraction_estimates <- function(X, W.facs, C1=NULL, C2=NULL, random_
   XY_probes <- read.table("https://raw.githubusercontent.com/cozygene/glint/master/parsers/assets/HumanMethylationSites_X_Y.txt")[,1]
   polymorphic_probes <- read.table("https://raw.githubusercontent.com/cozygene/glint/master/parsers/assets/polymorphic_cpgs.txt")[,1]
   exclude <- union(nonspecific_probes,union(XY_probes,polymorphic_probes))
-  
+  if (pidsley) {
+    message("removing pidsley sites")
+    exclude <- union(exclude, pidsley.sites)
+  }
   C.refactor <- cov.data
   X.refactor <- X[setdiff(rownames(X),exclude),]
   refactor.cov.mdl <-  TCA::refactor(X=X.refactor, k=length(cell.types),
@@ -350,7 +354,8 @@ refit_w_comparison <- function(bbc_pheno_path, bbc_facs_path, data_dir, plot_dir
                                                  W.facs = bbc$W.facs,
                                                  C1 = NULL,
                                                  C2 = bbc$C2[,"Plate",drop=FALSE],
-                                                 random_seed=random_seed)
+                                                 random_seed=random_seed,
+                                                 pidsley=TRUE)
   
   refit.w.plot <- plot_results(bbc.results, koestler.results, 
                                bbc.sample.size=ncol(bbc$X), 
