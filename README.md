@@ -1,10 +1,10 @@
 # Cell-type-specific Methylation Analysis
 
-This package provides functions that reproduce the analyses reported in Rahmani et al. (2020) comparing TCA (Rahmani et al. 2019) and CellDMC (Zheng et al. 2018).
+This package provides functions that reproduce the analyses reported in Rahmani et al. (2021) comparing TCA (Rahmani et al. 2019) and CellDMC (Zheng et al. 2018).
 
 ## Installation
 
-The package has a requirement of R version 3.5.0 or greater. The results found in Rahmani et al. (2020)
+The package has a requirement of R version 3.5.0 or greater. The results found in Rahmani et al. (2021)
 were run using R version 3.6.0. Other package requirements are listed in the Imports section of the
 DESCRIPTION file.
 
@@ -16,7 +16,7 @@ devtools::install_github("cozygene/CellTypeSpecificMethylationAnalysis")
 
 ## Usage
 
-The functions exported by this package will download most of the source data and output each figure found in Rahmani et al. (2020) into user-specified directories. Note that the data directory will contain just under 5GB of data and may temporarily max out at 13GB for temporary files.
+The functions exported by this package will download most of the source data and output each figure found in Rahmani et al. (2021) into user-specified directories. Note that the data directory will contain just under 5GB of data and may temporarily max out at 13GB for temporary files.
 
 ### Parametric Simulations
 
@@ -88,7 +88,7 @@ Note that this function runs each simulation serially (took on the order of a da
 
 ### TCA Optimization Comparison
 
-Rahmani et al. (2020) also introduces an alternative procedure for fitting the TCA model in an efficient manner. While this generalized method of moments (GMM) approach provides different estimates than the original TCA maximum likelihood (MLE) model, we show in Supplementary Figure 6 that their estimates are highly concordant as sample sizes increase. It can be run with
+Rahmani et al. (2021) also introduces an alternative procedure for fitting the TCA model in an efficient manner. While this generalized method of moments (GMM) approach provides different estimates than the original TCA maximum likelihood (MLE) model, we show in Supplementary Figure 6 that their estimates are highly concordant as sample sizes increase. It can be run with
 
 ```r
 mle.gmm.comparison.res <- var_mle_gmm_comparison(plot_dir)
