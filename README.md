@@ -1,6 +1,8 @@
 # Cell-type-specific Methylation Analysis
 
-This package provides functions that reproduce the analyses reported in Rahmani et al. (2021) comparing TCA (Rahmani et al. 2019) and CellDMC (Zheng et al. 2018).
+This package provides functions that reproduce the analyses reported in Rahmani et al. 2021 (<a href="https://www.biorxiv.org/content/10.1101/2021.02.14.431168v1" target="_blank">bioRxiv</a>) comparing TCA (<a href="https://www.nature.com/articles/s41467-019-11052-9" target="_blank">Rahmani et al. 2019, Nature Communications</a>) and CellDMC (<a href="https://www.nature.com/articles/s41592-018-0213-x" target="_blank">Zheng et al. 2018, Nature Methods</a>). These functions were also used to generate the figuers in <a href="https://www.frontiersin.org/articles/10.3389/fbinf.2021.792605/" target="_blank">Rahmani et al. 2022, Frontiers in Bioinformatics</a>; see under "2.1 Software and computational tools" in the <a href="https://www.frontiersin.org/articles/file/downloadfile/792605_supplementary-materials_datasheets_1_pdf/octet-stream/Data%20Sheet%201.pdf/2/792605" target="_blank">Supplementary Information</a> of the latter publication for more details.
+
+
 
 ## Installation
 
